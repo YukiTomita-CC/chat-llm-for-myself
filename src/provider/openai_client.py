@@ -1,6 +1,6 @@
 import os
 
-from openai import OpenAI
+from openai import OpenAI, AuthenticationError
 
 
 class OpenAIClient:
@@ -9,12 +9,17 @@ class OpenAIClient:
             self.client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
         except KeyError:
             self.client = None
+        except AuthenticationError:
+            self.client = None
         
-    def generate_response(self, model, messages):
+    def generate_response(self, model, system_prompt, messages):
         if self.client is None:
             yield f"You can not use {model}. Please add `OPENAI_API_KEY` to `/.env`."
         
         else:
+            if system_prompt:
+                messages = {"role": "system", "content": system_prompt} + messages
+                
             stream = self.client.chat.completions.create(
                 messages=messages,
                 model=model,

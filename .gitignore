@@ -1,2 +1,10 @@
 .env
 *.log
+
+**/__pycache__/**
+
+/.venv
+
+/assets/images
+/assets/*.json
+/chat_log
