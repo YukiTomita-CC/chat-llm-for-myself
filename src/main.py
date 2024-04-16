@@ -1,21 +1,21 @@
 from datetime import datetime
+import os
 
 from dotenv import load_dotenv
 import streamlit as st
-from streamlit_feedback import streamlit_feedback
+# from streamlit_feedback import streamlit_feedback
 
 from utils.json_reader import JsonReader
 from provider.anthropic_client import AnthropicClient
 from provider.llamacpp_client import LlamacppClient
 from provider.openai_client import OpenAIClient
+from styles.style import CHAT_MESSAGE_STYLE
 
 
 # ===== Initialize State =====
 st.set_page_config(layout="wide")
-
-if 'load_env' not in st.session_state:
-    load_dotenv()
-    st.session_state['load_env'] = True
+st.markdown(CHAT_MESSAGE_STYLE, unsafe_allow_html=True)
+load_dotenv()
 
 if 'selectable_models' not in st.session_state:
     st.session_state['selectable_models'] = JsonReader.get_register_models_dict()
@@ -25,6 +25,12 @@ if 'client' not in st.session_state:
 if 'model' not in st.session_state:
     st.session_state['model'] = "GPT-4"
 
+if 'user_avatar' not in st.session_state:
+    user_avatar_path = "assets/images/user_icon.png"
+    st.session_state['user_avatar'] = user_avatar_path if os.path.exists(user_avatar_path) else None
+if 'assistant_avatar' not in st.session_state:
+    assistant_avatar_path = "assets/images/assistant_icon.png"
+    st.session_state['assistant_avatar'] = assistant_avatar_path if os.path.exists(assistant_avatar_path) else None
 if 'chat_logs' not in st.session_state:
     st.session_state['chat_logs'] = JsonReader.get_chat_logs()
 if 'selected_chat_log' not in st.session_state:
@@ -118,7 +124,11 @@ def start_new_chat():
 
 # ===== UI =====
 with st.sidebar:
-    st.button("Start New Chat", on_click=start_new_chat)
+    st.button(
+        label="Start New Chat",
+        on_click=start_new_chat,
+        use_container_width=True
+        )
 
     st.selectbox(
         label="Chat Log",
@@ -161,19 +171,23 @@ with st.sidebar:
         on_click=start_new_chat
     )
 
-messages_container = st.container()
+for i, message in enumerate(st.session_state['messages']):
+    if i % 2 == 0:
+        avatar = st.session_state['user_avatar']
+    else:
+        avatar = st.session_state['assistant_avatar']
 
-for message in st.session_state['messages']:
-    with messages_container.chat_message(message["role"]):
+    with st.chat_message(message["role"], avatar=avatar):
         st.markdown(message["content"])
 
 if prompt := st.chat_input("Message LLM..."):
     st.session_state['messages'].append({"role": "user", "content": prompt})
     save_log()
-    with messages_container.chat_message("user"):
+
+    with st.chat_message("user", avatar=st.session_state['user_avatar']):
         st.markdown(prompt)
 
-    with messages_container.chat_message("assistant"):
+    with st.chat_message("assistant", avatar=st.session_state['assistant_avatar']):
         stream = st.session_state['client'].generate_response(
             model=st.session_state['selectable_models'][st.session_state['model']],
             system_prompt=st.session_state['system_prompt'],
@@ -186,5 +200,5 @@ if prompt := st.chat_input("Message LLM..."):
         )
         response = st.write_stream(stream)
 
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.session_state['messages'].append({"role": "assistant", "content": response})
     save_log()
