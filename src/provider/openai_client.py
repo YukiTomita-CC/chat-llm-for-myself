@@ -12,18 +12,19 @@ class OpenAIClient:
         except AuthenticationError:
             self.client = None
         
-    def generate_response(self, model, system_prompt, messages):
+    def generate_response(self, model, system_prompt, messages, temperature, repeat_penalty):
         if self.client is None:
             yield f"You can not use {model}. Please add `OPENAI_API_KEY` to `/.env`."
         
         else:
             if system_prompt:
-                messages = {"role": "system", "content": system_prompt} + messages
+                messages = [{"role": "system", "content": system_prompt}] + messages
                 
             stream = self.client.chat.completions.create(
                 messages=messages,
                 model=model,
                 stream=True,
+                temperature=temperature
             )
 
             for chunk in stream:

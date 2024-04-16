@@ -19,13 +19,13 @@ class LlamacppClient:
         server_path = os.environ['LLAMACPP_SERVER_PATH'] + "/server.exe"
         file_path = model_info[0]
         cpu_threads_num = os.environ['CPU_THREADS_NUM']
-        subprocess.Popen([server_path, "-m", file_path, "-c", "4096", "--mlock", "-t", cpu_threads_num, "-ngl", "20"], creationflags=subprocess.CREATE_NEW_CONSOLE)
+        subprocess.Popen([server_path, "-m", file_path, "-c", "4096", "--mlock", "-t", cpu_threads_num, "-ngl", "16"], creationflags=subprocess.CREATE_NEW_CONSOLE)
     
     def __del__(self):
         self._kill_process_using_port(8080)
         print("del")
         
-    def generate_response(self, model, system_prompt, messages):
+    def generate_response(self, model, system_prompt, messages, temperature, repeat_penalty):
         stream = requests.post(
             "http://localhost:8080/completion",
             headers={
@@ -33,11 +33,8 @@ class LlamacppClient:
             },
             data=json.dumps({
                 'prompt': self.convert_openchat(messages),
-                # 'temperature': st.session_state.temperature,
-                # 'top_k': st.session_state.top_k,
-                # 'top_p': st.session_state.top_p,
-                # 'repeat_penalty': st.session_state.repetition_penalty,
-                # 'n_predict': st.session_state.n_predict,
+                'temperature': temperature,
+                'repeat_penalty': repeat_penalty,
                 'stop': self.model_stop_tokens,
                 'stream': True
             }),

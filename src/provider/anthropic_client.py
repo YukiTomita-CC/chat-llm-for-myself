@@ -1,6 +1,8 @@
+import json
 import os
 
-from anthropic import Anthropic, AuthenticationError
+from anthropic import Anthropic
+from anthropic import AuthenticationError, BadRequestError
 
 
 class AnthropicClient:
@@ -12,16 +14,25 @@ class AnthropicClient:
         except AuthenticationError:
             self.client = None
         
-    def generate_response(self, model, system_prompt, messages):
+    def generate_response(self, model, system_prompt, messages, temperature, repeat_penalty):
         if self.client is None:
             yield f"You can not use {model}. Please add `ANTHROPIC_API_KEY` to `/.env`."
         
         else:
-            with self.client.messages.stream(
-                max_tokens=4096,
-                messages=messages,
-                model=model,
-                system=system_prompt
-            ) as stream:
-                for text in stream.text_stream:
-                    yield text
+            try:
+                with self.client.messages.stream(
+                    model=model,
+                    messages=messages,
+                    max_tokens=4096,
+                    system=system_prompt,
+                    temperature=temperature
+                ) as stream:
+                    for text in stream.text_stream:
+                        yield text
+                        
+            except BadRequestError as e:
+                if e.status_code == 400:
+                    j = json.loads(e.response.text)
+                    error_message = j['error']['message']
+                    if "credit" in error_message:
+                        yield f"**<!!!ERROR!!!>** \n\n{j['error']['message']}\n\n[Plans & Billing](https://console.anthropic.com/settings/plans)"

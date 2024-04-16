@@ -1,4 +1,5 @@
 streamlit
+streamlit-feedback==0.1.3
 requests
 python-dotenv
 openai
