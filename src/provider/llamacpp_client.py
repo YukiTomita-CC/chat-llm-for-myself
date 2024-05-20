@@ -19,7 +19,7 @@ class LlamacppClient:
         server_path = os.environ['LLAMACPP_SERVER_PATH'] + "/server.exe"
         file_path = model_info[0]
         cpu_threads_num = os.environ['CPU_THREADS_NUM']
-        subprocess.Popen([server_path, "-m", file_path, "-c", "4096", "--mlock", "-t", cpu_threads_num, "-ngl", "16"], creationflags=subprocess.CREATE_NEW_CONSOLE)
+        subprocess.Popen([server_path, "-m", file_path, "-c", "4096", "--mlock", "-t", cpu_threads_num], creationflags=subprocess.CREATE_NEW_CONSOLE)
     
     def __del__(self):
         self._kill_process_using_port(8080)
@@ -32,7 +32,7 @@ class LlamacppClient:
                 'Content-Type': 'application/json'
             },
             data=json.dumps({
-                'prompt': self.convert_openchat(messages),
+                'prompt': self.convert_vicuna(messages, system_prompt),
                 'temperature': temperature,
                 'repeat_penalty': repeat_penalty,
                 'stop': self.model_stop_tokens,
@@ -46,8 +46,8 @@ class LlamacppClient:
                 j = json.loads(chunk[6:].decode())
                 yield j.get("content", "")
 
-    def convert_vicuna(self, messages):
-        prompt = ""
+    def convert_vicuna(self, messages, system_prompt=""):
+        prompt = system_prompt + "\n"
         for message in messages:
             if message["role"] == "user":
                 prompt += f"USER: {message['content']}\n"

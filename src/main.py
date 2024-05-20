@@ -17,13 +17,15 @@ st.set_page_config(layout="wide")
 st.markdown(CHAT_MESSAGE_STYLE, unsafe_allow_html=True)
 load_dotenv()
 
+if 'chat_logs' not in st.session_state:
+    st.session_state['chat_logs'] = JsonReader.get_chat_logs()
 if 'selectable_models' not in st.session_state:
     st.session_state['selectable_models'] = JsonReader.get_register_models_dict()
 
 if 'client' not in st.session_state:
     st.session_state['client'] = OpenAIClient()
 if 'model' not in st.session_state:
-    st.session_state['model'] = "GPT-4"
+    st.session_state['model'] = "GPT-4o"
 
 if 'user_avatar' not in st.session_state:
     user_avatar_path = "assets/images/user_icon.png"
@@ -31,8 +33,6 @@ if 'user_avatar' not in st.session_state:
 if 'assistant_avatar' not in st.session_state:
     assistant_avatar_path = "assets/images/assistant_icon.png"
     st.session_state['assistant_avatar'] = assistant_avatar_path if os.path.exists(assistant_avatar_path) else None
-if 'chat_logs' not in st.session_state:
-    st.session_state['chat_logs'] = JsonReader.get_chat_logs()
 if 'selected_chat_log' not in st.session_state:
     st.session_state['selected_chat_log'] = "New Chat"
 if 'is_new_chat' not in st.session_state:
@@ -59,7 +59,7 @@ def changed_model():
     change_client()
 
 def change_client():
-    if st.session_state['model'] in ["GPT-4", "GPT-3.5"]:
+    if st.session_state['model'] in ["GPT-4o", "GPT-4", "GPT-3.5"]:
         st.session_state['client'] = OpenAIClient()
     elif st.session_state['model'] in ["Claude 3 Opus", "Claude 3 Sonnet", "Claude 3 Haiku"]:
         st.session_state['client'] = AnthropicClient()
@@ -110,7 +110,7 @@ def start_new_chat():
     st.session_state['selected_chat_log'] = "New Chat"
     st.session_state['is_new_chat'] = True
     st.session_state['temp_log_name_for_new_chat'] = ""
-    st.session_state['model'] = "GPT-4"
+    st.session_state['model'] = "GPT-4o"
 
     st.session_state['system_prompt'] = ""
 
