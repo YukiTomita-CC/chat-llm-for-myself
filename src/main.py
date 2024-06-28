@@ -61,7 +61,7 @@ def changed_model():
 def change_client():
     if st.session_state['model'] in ["GPT-4o", "GPT-4", "GPT-3.5"]:
         st.session_state['client'] = OpenAIClient()
-    elif st.session_state['model'] in ["Claude 3 Opus", "Claude 3 Sonnet", "Claude 3 Haiku"]:
+    elif st.session_state['model'] in ["Claude 3.5 Sonnet", "Claude 3 Opus", "Claude 3 Sonnet", "Claude 3 Haiku"]:
         st.session_state['client'] = AnthropicClient()
     else:
         st.session_state['client'] = LlamacppClient(st.session_state['model'])
